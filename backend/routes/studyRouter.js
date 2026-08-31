@@ -1,15 +1,17 @@
-const express=require('express');
-const studyRouter=express.Router();
+const express = require('express');
+const studyRouter = express.Router();
 
-//local module
-const studyController=require('../controllers/studyController');
+const studyController = require('../controllers/studyController');
 
+// GET all subjects
+studyRouter.get("/", studyController.getSubjects);
 
+// POST add new subject
+studyRouter.post("/add-subject", studyController.postAddSubject);
 
-studyRouter.get("/add-subject",studyController.getAddSubject);
+// DELETE subject by ID
+studyRouter.delete("/:id", studyController.deleteSubject);
 
-studyRouter.post("/add-subject",studyController.postAddSubject);
+studyRouter.get("/add-subject", studyController.getAddSubject);
 
-
-//exports
-exports.studyRouter=studyRouter;
+exports.studyRouter = studyRouter;

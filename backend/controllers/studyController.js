@@ -1,4 +1,15 @@
 const subject = require('../models/subject');
+
+exports.getSubjects = async (req, res, next) => {
+  try {
+    const subjects = await subject.find().sort({ _id: -1 });
+    res.status(200).json(subjects);
+  } catch (err) {
+    console.error("Error fetching subjects:", err);
+    res.status(500).json({ error: "Failed to fetch subjects from database", details: err.message });
+  }
+};
+
 exports.postAddSubject = async (req, res, next) => {
   try {
     const { subjectName, duration, topic } = req.body;
@@ -16,7 +27,18 @@ exports.postAddSubject = async (req, res, next) => {
     res.status(500).json({ error: "Failed to save subject to database", details: err.message });
   }
 };
+
+exports.deleteSubject = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await subject.findByIdAndDelete(id);
+    res.status(200).json({ message: "Subject deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting subject:", err);
+    res.status(500).json({ error: "Failed to delete subject", details: err.message });
+  }
+};
+
 exports.getAddSubject = (req, res, next) => {
   console.log(req.url);
 };
-
