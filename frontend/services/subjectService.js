@@ -31,6 +31,22 @@ export const addSubjectService = async ({ subjectName, duration, topic }) => {
   return response.json();
 };
 
+export const updateSubjectService = async (id, { subjectName, duration, topic }) => {
+  const response = await fetch(`${API_BASE_URL}/${id}/update-subject`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ subjectName, duration, topic })
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  return response.json();
+};
+
 export const deleteSubjectService = async (id) => {
   const response = await fetch(`${API_BASE_URL}/${id}`, {
     method: "DELETE",

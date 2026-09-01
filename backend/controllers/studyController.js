@@ -39,6 +39,25 @@ exports.deleteSubject = async (req, res, next) => {
   }
 };
 
+exports.updateSubject = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { subjectName, duration, topic } = req.body;
+    const updatedSubject = await subject.findByIdAndUpdate(
+      id,
+      { subject: subjectName, duration, topic },
+      { returnDocument: 'after', runValidators: true }
+    );
+    if (!updatedSubject) {
+      return res.status(404).json({ error: "Subject not found" });
+    }
+    res.status(200).json(updatedSubject);
+  } catch (err) {
+    console.error("Error updating subject:", err);
+    res.status(500).json({ error: "Failed to update subject", details: err.message });
+  }
+};
+
 exports.getAddSubject = (req, res, next) => {
   console.log(req.url);
 };
