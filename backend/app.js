@@ -6,7 +6,9 @@ const cors=require('cors')
 //local module
 const connectDB=require('./config/db');
 const {studyRouter}=require('./routes/studyRouter');
+const {authRouter}=require('./routes/authRouter')
 const errorController=require('./controllers/errorController');
+
 
 
 const app=express();
@@ -23,6 +25,7 @@ app.use(express.json());
 app.use(cors());
 
 app.use("/api/subject",studyRouter);
+app.use("/api/auth",authRouter);
 app.use(errorController.pageNotFound);
 
 app

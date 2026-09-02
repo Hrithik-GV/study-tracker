@@ -58,6 +58,3 @@ exports.updateSubject = async (req, res, next) => {
   }
 };
 
-exports.getAddSubject = (req, res, next) => {
-  console.log(req.url);
-};
