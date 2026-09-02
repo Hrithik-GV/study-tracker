@@ -1,0 +1,19 @@
+const API_BASE_URL = "http://localhost:3001/api/auth";
+
+export const loginService = async ({ email, password }) => {
+  const response = await fetch(`${API_BASE_URL}/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, password }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || data.error || `HTTP error! status: ${response.status}`);
+  }
+
+  return data;
+};
