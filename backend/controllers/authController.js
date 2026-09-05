@@ -17,15 +17,32 @@ exports.postLogin = async (req, res, next) => {
     const foundUser = await user.findOne({ email, password });
 
     if (foundUser) {
+       // Attach session flags and user info to req.session
+      req.session.isLoggedIn=true;
+      req.session.user={
+        id:foundUser._id,
+        email: foundUser.email,
+        firstName: foundUser.firstName,
+        lastName: foundUser.lastName,
+      }
+          // Save session to MongoDB before returning response
+
+         await new Promise((resolve,reject)=>{
+           req.session.save((err)=>{
+           if(err) {
+             console.error("Session saving failed internally:", err);
+             return reject(err);
+           }
+            resolve()
+           })
+         })
+        
+
       res.status(200).json({
         message: "Login successful",
-        user: {
-          id: foundUser._id,
-          firstName: foundUser.firstName,
-          lastName: foundUser.lastName,
-          email: foundUser.email,
-        },
+        user: req.session.user
       });
+      
     } else {
       res.status(401).json({ error: "Invalid email or password" });
     }
@@ -76,4 +93,14 @@ exports.postSignup = async (req, res, next) => {
     console.error("Signup error:", err);
     res.status(500).json({ error: "Server error during registration", details: err.message });
   }
+};
+
+exports.postLogout = (req, res, next) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ error: "Logout failed" });
+    }
+    res.clearCookie('connect.sid'); // Clear session cookie in browser
+    res.status(200).json({ message: "Logged out successfully" });
+  });
 };
