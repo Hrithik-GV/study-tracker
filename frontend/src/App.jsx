@@ -13,7 +13,12 @@ import {
   useNavigate,
 } from "react-router-dom";
 
-function AppShell({ children, onNavigateToDashboard, onNavigateToAddSubject }) {
+function AppShell({
+  children,
+  onNavigateToDashboard,
+  onNavigateToAddSubject,
+  onLogout,
+}) {
   return (
     <>
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
@@ -55,6 +60,13 @@ function AppShell({ children, onNavigateToDashboard, onNavigateToAddSubject }) {
             >
               + Add Subject
             </button>
+            <button
+              type="button"
+              onClick={onLogout}
+              className="px-4 py-2 text-sm font-semibold rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-all"
+            >
+              Log Out
+            </button>
           </nav>
         </div>
       </header>
@@ -73,6 +85,7 @@ function AppShell({ children, onNavigateToDashboard, onNavigateToAddSubject }) {
 function App() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [user, setUser] = useState(null);
+  const [isLogged, setIsLogged] = useState(false);
   const navigate = useNavigate();
 
   const handleSubjectAdded = () => {
@@ -82,7 +95,14 @@ function App() {
 
   const handleAuthSuccess = (authData) => {
     setUser(authData.user || authData);
+    setIsLogged(true);
     navigate("/dashboard");
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setIsLogged(false);
+    navigate("/login");
   };
 
   return (
@@ -93,7 +113,7 @@ function App() {
         <Route
           path="/login"
           element={
-            user ? (
+            isLogged ? (
               <Navigate to="/dashboard" replace />
             ) : (
               <Login
@@ -107,7 +127,7 @@ function App() {
         <Route
           path="/signup"
           element={
-            user ? (
+            isLogged ? (
               <Navigate to="/dashboard" replace />
             ) : (
               <Signup
@@ -121,10 +141,11 @@ function App() {
         <Route
           path="/dashboard"
           element={
-            user ? (
+            isLogged ? (
               <AppShell
                 onNavigateToDashboard={() => navigate("/dashboard")}
                 onNavigateToAddSubject={() => navigate("/add-subject")}
+                onLogout={handleLogout}
               >
                 <Dashboard
                   onOpenAddModal={() => navigate("/add-subject")}
@@ -140,10 +161,11 @@ function App() {
         <Route
           path="/add-subject"
           element={
-            user ? (
+            isLogged ? (
               <AppShell
                 onNavigateToDashboard={() => navigate("/dashboard")}
                 onNavigateToAddSubject={() => navigate("/add-subject")}
+                onLogout={handleLogout}
               >
                 <div className="max-w-2xl mx-auto">
                   <div className="mb-4 flex items-center justify-between">
