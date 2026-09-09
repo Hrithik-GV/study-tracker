@@ -1,123 +1,171 @@
-import React, { useState } from 'react';
-import './App.css';
-import Dashboard from './components/Dashboard';
-import AddSubject from './components/AddSubject';
-import Login from './components/login';
-import Signup from './components/signup';
-import LandingPage from './components/LandingPage';
+import React, { useState } from "react";
+import "./App.css";
+import Dashboard from "./components/Dashboard";
+import AddSubject from "./components/AddSubject";
+import Login from "./components/login";
+import Signup from "./components/signup";
+import LandingPage from "./components/LandingPage";
+import {
+  Routes,
+  Route,
+  Navigate,
+  NavLink,
+  useNavigate,
+} from "react-router-dom";
+
+function AppShell({ children, onNavigateToDashboard, onNavigateToAddSubject }) {
+  return (
+    <>
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div
+            className="flex items-center space-x-3 cursor-pointer"
+            onClick={onNavigateToDashboard}
+          >
+            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-md">
+              📚
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-slate-900 leading-tight">
+                Study Tracker
+              </h1>
+              <p className="text-xs text-slate-500 font-medium">
+                MongoDB Connected Dashboard
+              </p>
+            </div>
+          </div>
+
+          <nav className="flex items-center space-x-2">
+            <NavLink
+              to="/dashboard"
+              className={({ isActive }) =>
+                `px-4 py-2 text-sm font-semibold rounded-xl transition-all ${
+                  isActive
+                    ? "bg-indigo-50 text-indigo-600 shadow-xs"
+                    : "text-slate-600 hover:bg-slate-100"
+                }`
+              }
+            >
+              Dashboard
+            </NavLink>
+            <button
+              type="button"
+              onClick={onNavigateToAddSubject}
+              className="px-4 py-2 text-sm font-semibold rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-all"
+            >
+              + Add Subject
+            </button>
+          </nav>
+        </div>
+      </header>
+
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {children}
+      </main>
+
+      <footer className="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
+        Study Tracker • Full-stack React & Node.js/MongoDB Application
+      </footer>
+    </>
+  );
+}
 
 function App() {
-  const [activeTab, setActiveTab] = useState('landing'); // 'landing' | 'dashboard' | 'addSubject' | 'login' | 'signup'
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   const handleSubjectAdded = () => {
-    // Refresh dashboard data & switch view to dashboard
     setRefreshTrigger((prev) => prev + 1);
-    setActiveTab('dashboard');
+    navigate("/dashboard");
   };
 
   const handleAuthSuccess = (authData) => {
     setUser(authData.user || authData);
-    setActiveTab('dashboard');
+    navigate("/dashboard");
   };
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
-      {activeTab === 'landing' ? (
-        <LandingPage
-          onLoginClick={() => setActiveTab('login')}
-          onSignupClick={() => setActiveTab('signup')}
-        />
-      ) : (
-        <>
-          {/* Top Navbar */}
-          <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-              <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('dashboard')}>
-                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-md">
-                  📚
-                </div>
-                <div>
-                  <h1 className="text-lg font-bold text-slate-900 leading-tight">Study Tracker</h1>
-                  <p className="text-xs text-slate-500 font-medium">MongoDB Connected Dashboard</p>
-                </div>
-              </div>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
 
-              {/* Navigation Tabs */}
-              <nav className="flex items-center space-x-2">
-                <button
-                  onClick={() => setActiveTab('dashboard')}
-                  className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all ${
-                    activeTab === 'dashboard'
-                      ? 'bg-indigo-50 text-indigo-600 shadow-xs'
-                      : 'text-slate-600 hover:bg-slate-100'
-                  }`}
-                >
-                  Dashboard
-                </button>
-                <button
-                  onClick={() => setActiveTab('login')}
-                  className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all ${
-                    activeTab === 'login' || activeTab === 'signup'
-                      ? 'bg-indigo-50 text-indigo-600 shadow-xs'
-                      : 'text-slate-600 hover:bg-slate-100'
-                  }`}
-                >
-                  {user ? `👤 ${user.firstName || 'Profile'}` : 'Login / Signup'}
-                </button>
-                <button
-                  onClick={() => setActiveTab('addSubject')}
-                  className={`px-4 py-2 text-sm font-semibold rounded-xl transition-all ${
-                    activeTab === 'addSubject'
-                      ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
-                  }`}
-                >
-                  + Add Subject
-                </button>
-              </nav>
-            </div>
-          </header>
-
-          {/* Main Content Area */}
-          <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {activeTab === 'login' ? (
+        <Route
+          path="/login"
+          element={
+            user ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
               <Login
                 onLoginSuccess={handleAuthSuccess}
-                onSwitchToSignup={() => setActiveTab('signup')}
+                onSwitchToSignup={() => navigate("/signup")}
               />
-            ) : activeTab === 'signup' ? (
+            )
+          }
+        />
+
+        <Route
+          path="/signup"
+          element={
+            user ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
               <Signup
                 onSignupSuccess={handleAuthSuccess}
-                onSwitchToLogin={() => setActiveTab('login')}
+                onSwitchToLogin={() => navigate("/login")}
               />
-            ) : activeTab === 'dashboard' ? (
-              <Dashboard
-                onOpenAddModal={() => setActiveTab('addSubject')}
-                refreshTrigger={refreshTrigger}
-              />
-            ) : (
-              <div className="max-w-2xl mx-auto">
-                <div className="mb-4 flex items-center justify-between">
-                  <button
-                    onClick={() => setActiveTab('dashboard')}
-                    className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 flex items-center space-x-1"
-                  >
-                    <span>← Back to Dashboard</span>
-                  </button>
-                </div>
-                <AddSubject onAddSubject={handleSubjectAdded} />
-              </div>
-            )}
-          </main>
+            )
+          }
+        />
 
-          {/* Footer */}
-          <footer className="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
-            Study Tracker • Full-stack React & Node.js/MongoDB Application
-          </footer>
-        </>
-      )}
+        <Route
+          path="/dashboard"
+          element={
+            user ? (
+              <AppShell
+                onNavigateToDashboard={() => navigate("/dashboard")}
+                onNavigateToAddSubject={() => navigate("/add-subject")}
+              >
+                <Dashboard
+                  onOpenAddModal={() => navigate("/add-subject")}
+                  refreshTrigger={refreshTrigger}
+                />
+              </AppShell>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        <Route
+          path="/add-subject"
+          element={
+            user ? (
+              <AppShell
+                onNavigateToDashboard={() => navigate("/dashboard")}
+                onNavigateToAddSubject={() => navigate("/add-subject")}
+              >
+                <div className="max-w-2xl mx-auto">
+                  <div className="mb-4 flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => navigate("/dashboard")}
+                      className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 flex items-center space-x-1"
+                    >
+                      <span>← Back to Dashboard</span>
+                    </button>
+                  </div>
+                  <AddSubject onAddSubject={handleSubjectAdded} />
+                </div>
+              </AppShell>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </div>
   );
 }

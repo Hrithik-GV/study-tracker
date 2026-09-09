@@ -1,26 +1,25 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
-const LandingPage = ({ onLoginClick, onSignupClick }) => {
+const LandingPage = () => {
   return (
     <div className="min-h-screen bg-blue-50 flex flex-col">
       {/* Header */}
       <header className="bg-blue-600 text-white py-4 px-8 flex justify-between items-center">
         <h1 className="text-2xl font-bold">Study Tracker</h1>
         <nav className="space-x-4">
-          <button
-            type="button"
-            onClick={onLoginClick}
-            className="bg-white text-blue-600 px-4 py-1 rounded hover:bg-gray-100"
+          <Link
+            to="/login"
+            className="bg-white text-blue-600 px-4 py-1 rounded hover:bg-gray-100 inline-block"
           >
             Login
-          </button>
-          <button
-            type="button"
-            onClick={onSignupClick}
-            className="bg-blue-800 px-4 py-1 rounded hover:bg-blue-700 text-white"
+          </Link>
+          <Link
+            to="/signup"
+            className="bg-blue-800 px-4 py-1 rounded hover:bg-blue-700 text-white inline-block"
           >
             Sign up
-          </button>
+          </Link>
         </nav>
       </header>
 
@@ -33,9 +32,12 @@ const LandingPage = ({ onLoginClick, onSignupClick }) => {
           <p className="text-gray-700 text-lg">
             Organize your learning, track your hours, and achieve your goals.
           </p>
-          <button className="bg-orange-500 text-white px-6 py-2 rounded hover:bg-orange-600">
+          <Link
+            to="/signup"
+            className="bg-orange-500 text-white px-6 py-2 rounded hover:bg-orange-600 inline-block"
+          >
             Get Started
-          </button>
+          </Link>
           <p className="text-gray-500 text-sm">Login or Register to begin</p>
         </div>
 
