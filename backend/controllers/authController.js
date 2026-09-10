@@ -1,4 +1,5 @@
 const user = require('../models/user');
+const bcrypt = require('bcryptjs');
 
 // GET /api/auth/login
 exports.getLogin = (req, res, next) => {
@@ -14,38 +15,42 @@ exports.postLogin = async (req, res, next) => {
       return res.status(400).json({ error: "Email and password are required" });
     }
 
-    const foundUser = await user.findOne({ email, password });
+    const foundUser = await user.findOne({ email });
 
-    if (foundUser) {
-       // Attach session flags and user info to req.session
-      req.session.isLoggedIn=true;
-      req.session.user={
-        id:foundUser._id,
-        email: foundUser.email,
-        firstName: foundUser.firstName,
-        lastName: foundUser.lastName,
-      }
-          // Save session to MongoDB before returning response
-
-         await new Promise((resolve,reject)=>{
-           req.session.save((err)=>{
-           if(err) {
-             console.error("Session saving failed internally:", err);
-             return reject(err);
-           }
-            resolve()
-           })
-         })
-        
-
-      res.status(200).json({
-        message: "Login successful",
-        user: req.session.user
-      });
-      
-    } else {
-      res.status(401).json({ error: "Invalid email or password" });
+    if (!foundUser) {
+      return res.status(401).json({ error: "Invalid email or password" });
     }
+
+    const isMatch = await bcrypt.compare(password, foundUser.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    // Attach session flags and user info to req.session
+    req.session.isLoggedIn = true;
+    req.session.user = {
+      id: foundUser._id,
+      email: foundUser.email,
+      firstName: foundUser.firstName,
+      lastName: foundUser.lastName,
+    };
+
+    // Save session to MongoDB before returning response
+    await new Promise((resolve, reject) => {
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session saving failed internally:", err);
+          return reject(err);
+        }
+        resolve();
+      });
+    });
+
+    res.status(200).json({
+      message: "Login successful",
+      user: req.session.user
+    });
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ error: "Server error during login", details: err.message });
@@ -67,18 +72,23 @@ exports.postSignup = async (req, res, next) => {
     }
 
     const existingUser = await user.findOne({ email });
+    
     if (existingUser) {
       return res.status(400).json({ error: "User already exists with this email" });
     }
+      const hashedPassword = await bcrypt.hash(password, 12);
 
     const newUser = new user({
       firstName,
       lastName,
       email,
-      password,
+      password: hashedPassword,
     });
 
+
+
     await newUser.save();
+
 
     res.status(201).json({
       message: "User registered successfully",
