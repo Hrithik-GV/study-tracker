@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 import Dashboard from "./components/Dashboard";
 import AddSubject from "./components/AddSubject";
 import Login from "./components/login";
 import Signup from "./components/signup";
 import LandingPage from "./components/LandingPage";
+import { logoutService, getUserByIdService } from "../services/authService";
 import {
   Routes,
   Route,
@@ -86,7 +87,39 @@ function App() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [user, setUser] = useState(null);
   const [isLogged, setIsLogged] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const verifyUserSession = async () => {
+      const storedUserId = localStorage.getItem("study_tracker_userId");
+      if (!storedUserId) {
+        setIsCheckingAuth(false);
+        return;
+      }
+
+      try {
+        const data = await getUserByIdService(storedUserId);
+        if (data && data.user) {
+          setUser(data.user);
+          setIsLogged(true);
+        } else {
+          localStorage.removeItem("study_tracker_userId");
+          setUser(null);
+          setIsLogged(false);
+        }
+      } catch (err) {
+        console.warn("Session expired or invalid:", err);
+        localStorage.removeItem("study_tracker_userId");
+        setUser(null);
+        setIsLogged(false);
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    verifyUserSession();
+  }, []);
 
   const handleSubjectAdded = () => {
     setRefreshTrigger((prev) => prev + 1);
@@ -94,16 +127,39 @@ function App() {
   };
 
   const handleAuthSuccess = (authData) => {
-    setUser(authData.user || authData);
+    const userData = authData.user || authData;
+    const userId = userData.id || userData._id;
+    if (userId) {
+      localStorage.setItem("study_tracker_userId", userId);
+    }
+    setUser(userData);
     setIsLogged(true);
     navigate("/dashboard");
   };
 
-  const handleLogout = () => {
-    setUser(null);
-    setIsLogged(false);
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await logoutService();
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      localStorage.removeItem("study_tracker_userId");
+      setUser(null);
+      setIsLogged(false);
+      navigate("/login");
+    }
   };
+
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-slate-600 font-semibold text-sm">Verifying session...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
@@ -148,6 +204,7 @@ function App() {
                 onLogout={handleLogout}
               >
                 <Dashboard
+                  user={user}
                   onOpenAddModal={() => navigate("/add-subject")}
                   refreshTrigger={refreshTrigger}
                 />
@@ -177,7 +234,7 @@ function App() {
                       <span>← Back to Dashboard</span>
                     </button>
                   </div>
-                  <AddSubject onAddSubject={handleSubjectAdded} />
+                  <AddSubject user={user} onAddSubject={handleSubjectAdded} />
                 </div>
               </AppShell>
             ) : (

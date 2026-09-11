@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getSubjectsService, deleteSubjectService, updateSubjectService } from '../../services/subjectService';
 
-export default function Dashboard({ onOpenAddModal, refreshTrigger }) {
+export default function Dashboard({ user, onOpenAddModal, refreshTrigger }) {
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -15,14 +15,20 @@ export default function Dashboard({ onOpenAddModal, refreshTrigger }) {
   const [updateError, setUpdateError] = useState('');
 
   const fetchSubjects = async () => {
+    const userId = user?.id || user?._id || localStorage.getItem('study_tracker_userId');
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError('');
-      const data = await getSubjectsService();
+      const data = await getSubjectsService(userId);
       setSubjects(data);
     } catch (err) {
       console.error('Error fetching subjects:', err);
-      setError('Failed to load subjects from database. Please ensure backend server is running.');
+      setError(err.message || 'Failed to load subjects from database. Please ensure backend server is running.');
     } finally {
       setLoading(false);
     }
@@ -30,7 +36,7 @@ export default function Dashboard({ onOpenAddModal, refreshTrigger }) {
 
   useEffect(() => {
     fetchSubjects();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, user]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this subject?')) return;
@@ -40,7 +46,7 @@ export default function Dashboard({ onOpenAddModal, refreshTrigger }) {
       setSubjects((prev) => prev.filter((s) => s._id !== id));
     } catch (err) {
       console.error('Failed to delete subject:', err);
-      alert('Failed to delete subject. Please try again.');
+      alert(err.message || 'Failed to delete subject. Please try again.');
     } finally {
       setDeletingId(null);
     }
@@ -79,7 +85,7 @@ export default function Dashboard({ onOpenAddModal, refreshTrigger }) {
       setEditingSubject(null);
     } catch (err) {
       console.error('Failed to update subject:', err);
-      setUpdateError('Failed to update subject in database. Please check backend connection.');
+      setUpdateError(err.message || 'Failed to update subject in database. Please check backend connection.');
     } finally {
       setIsUpdating(false);
     }

@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const user = require('../models/user');
 const bcrypt = require('bcryptjs');
 
@@ -76,7 +77,7 @@ exports.postSignup = async (req, res, next) => {
     if (existingUser) {
       return res.status(400).json({ error: "User already exists with this email" });
     }
-      const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     const newUser = new user({
       firstName,
@@ -85,10 +86,26 @@ exports.postSignup = async (req, res, next) => {
       password: hashedPassword,
     });
 
-
-
     await newUser.save();
 
+    // Attach session flags and user info on signup as well
+    req.session.isLoggedIn = true;
+    req.session.user = {
+      id: newUser._id,
+      email: newUser.email,
+      firstName: newUser.firstName,
+      lastName: newUser.lastName,
+    };
+
+    await new Promise((resolve, reject) => {
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session saving failed internally on signup:", err);
+          return reject(err);
+        }
+        resolve();
+      });
+    });
 
     res.status(201).json({
       message: "User registered successfully",
@@ -105,12 +122,53 @@ exports.postSignup = async (req, res, next) => {
   }
 };
 
-exports.postLogout = (req, res, next) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ error: "Logout failed" });
+// GET /api/auth/:userId
+exports.getUserById = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ error: "Invalid user ID format" });
     }
-    res.clearCookie('connect.sid'); // Clear session cookie in browser
+
+    if (!req.session || !req.session.isLoggedIn || !req.session.user) {
+      return res.status(401).json({ error: "Unauthorized. Please log in first." });
+    }
+
+    if (req.session.user.id.toString() !== userId.toString()) {
+      return res.status(403).json({ error: "Forbidden. Access denied." });
+    }
+
+    const foundUser = await user.findById(userId).select('-password');
+    if (!foundUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.status(200).json({
+      user: {
+        id: foundUser._id,
+        firstName: foundUser.firstName,
+        lastName: foundUser.lastName,
+        email: foundUser.email,
+      },
+    });
+  } catch (err) {
+    console.error("Error fetching user by ID:", err);
+    res.status(500).json({ error: "Failed to fetch user", details: err.message });
+  }
+};
+
+exports.postLogout = (req, res, next) => {
+  if (req.session) {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ error: "Logout failed" });
+      }
+      res.clearCookie('connect.sid', { path: '/' });
+      res.status(200).json({ message: "Logged out successfully" });
+    });
+  } else {
+    res.clearCookie('connect.sid', { path: '/' });
     res.status(200).json({ message: "Logged out successfully" });
-  });
+  }
 };

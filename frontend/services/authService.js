@@ -37,3 +37,40 @@ export const signupService = async ({ firstName, lastName, email, password }) =>
 
   return data;
 };
+
+export const logoutService = async () => {
+  const response = await fetch(`${API_BASE_URL}/logout`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || data.error || `HTTP error! status: ${response.status}`);
+  }
+
+  return data;
+};
+
+export const getUserByIdService = async (userId) => {
+  const response = await fetch(`${API_BASE_URL}/${userId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || data.error || `HTTP error! status: ${response.status}`);
+  }
+
+  return data;
+};
+

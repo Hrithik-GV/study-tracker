@@ -10,7 +10,10 @@ authRouter.post("/login", authController.postLogin);
 authRouter.get("/signup", authController.getSignup);
 authRouter.post("/signup", authController.postSignup);
 
-//logout route
-authRouter.post("/logout",isAuth,authController.postLogout)
+// Logout route
+authRouter.post("/logout", authController.postLogout);
+
+// Get user by ID route
+authRouter.get("/:userId", isAuth, authController.getUserById);
 
 exports.authRouter = authRouter;

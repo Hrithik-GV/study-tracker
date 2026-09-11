@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { addSubjectService } from '../../services/subjectService';
 
-export default function AddSubject({ onAddSubject }) {
+export default function AddSubject({ user, onAddSubject }) {
   const [formData, setFormData] = useState({
     subjectName: '',
     duration: '',
@@ -39,10 +39,16 @@ export default function AddSubject({ onAddSubject }) {
       return;
     }
 
+    const userId = user?.id || user?._id || localStorage.getItem('study_tracker_userId');
+    if (!userId) {
+      setErrors({ apiError: 'User authentication not found. Please log in.' });
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       // Call backend API service
-      const savedSubject = await addSubjectService(formData);
+      const savedSubject = await addSubjectService(userId, formData);
 
       if (onAddSubject) {
         onAddSubject(savedSubject);
@@ -55,7 +61,7 @@ export default function AddSubject({ onAddSubject }) {
       console.error('Failed to submit subject:', error);
       setErrors((prev) => ({
         ...prev,
-        apiError: 'Failed to save subject to server. Please check backend connection.',
+        apiError: error.message || 'Failed to save subject to server. Please check backend connection.',
       }));
     } finally {
       setIsSubmitting(false);
